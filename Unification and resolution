@@ -1,0 +1,115 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNT4ZYscJIygLTxPZaqGR6Z",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Ishwarya-L/Unification-and-resolution/blob/main/Unification%20and%20resolution\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "NrruL-eZKAie",
+        "outputId": "2e9a9ec1-3136-42ab-ec8e-d43f187d2e4e"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Unification: {'x': 'a', 'y': 'b'}\n",
+            "Resolvents: [{'C', 'A'}]\n"
+          ]
+        }
+      ],
+      "source": [
+        "def unify(x, y, subs=None):\n",
+        "    if subs is None:\n",
+        "        subs = {}\n",
+        "\n",
+        "    if x == y:\n",
+        "        return subs\n",
+        "    elif isinstance(x, str) and x.islower():  # Variable\n",
+        "        return unify_var(x, y, subs)\n",
+        "    elif isinstance(y, str) and y.islower():\n",
+        "        return unify_var(y, x, subs)\n",
+        "    elif isinstance(x, tuple) and isinstance(y, tuple) and len(x) == len(y):\n",
+        "        for xi, yi in zip(x, y):\n",
+        "            subs = unify(xi, yi, subs)\n",
+        "            if subs is None:\n",
+        "                return None\n",
+        "        return subs\n",
+        "    else:\n",
+        "        return None\n",
+        "\n",
+        "def unify_var(var, x, subs):\n",
+        "    if var in subs:\n",
+        "        return unify(subs[var], x, subs)\n",
+        "    elif isinstance(x, str) and x in subs:\n",
+        "        return unify(var, subs[x], subs)\n",
+        "    elif occurs_check(var, x, subs):\n",
+        "        return None\n",
+        "    else:\n",
+        "        subs[var] = x\n",
+        "        return subs\n",
+        "\n",
+        "def occurs_check(var, x, subs):\n",
+        "    if var == x:\n",
+        "        return True\n",
+        "    elif isinstance(x, str) and x in subs:\n",
+        "        return occurs_check(var, subs[x], subs)\n",
+        "    elif isinstance(x, tuple):\n",
+        "        return any(occurs_check(var, xi, subs) for xi in x)\n",
+        "    return False\n",
+        "# Unify f(x, y) with f(a, b)\n",
+        "x = ('f', 'x', 'y')\n",
+        "y = ('f', 'a', 'b')\n",
+        "\n",
+        "print(\"Unification:\", unify(x, y))\n",
+        "\n",
+        "def resolve(clause1, clause2):\n",
+        "    resolvents = []\n",
+        "    for lit1 in clause1:\n",
+        "        for lit2 in clause2:\n",
+        "            if lit1 == negate(lit2):\n",
+        "                new_clause = (set(clause1) - {lit1}) | (set(clause2) - {lit2})\n",
+        "                resolvents.append(new_clause)\n",
+        "    return resolvents\n",
+        "\n",
+        "def negate(literal):\n",
+        "    return literal[1:] if literal.startswith('~') else '~' + literal\n",
+        "\n",
+        "# Example usage\n",
+        "C1 = {\"A\", \"~B\"}\n",
+        "C2 = {\"B\", \"C\"}\n",
+        "\n",
+        "res = resolve(C1, C2)\n",
+        "print(\"Resolvents:\", res)\n"
+      ]
+    }
+  ]
+}
